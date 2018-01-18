@@ -7,7 +7,7 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #00FFFF;
+            background-color: #FFBC79;
         }
     </style>
     <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
@@ -34,7 +34,6 @@
         this.layer = null;
         this.pacman = null;
         this.music = null;
-        this.goomba = null;
         this.safetile = 218;
         this.gridsize = 16;
 
@@ -85,8 +84,6 @@
             this.load.tilemap('map', 'assets/pacman-map.json', null, Phaser.Tilemap.TILED_JSON);
             this.load.image('smlives', 'assets/smlives.png');
             this.load.image('bonus', 'assets/bonus.png');
-            this.load.spritesheet('goomba', 'assets/goomba.png', 16, 16);
-            
 
         },
 
@@ -107,8 +104,10 @@
             this.map.createFromTiles(81, this.safetile, 'flower', this.layer, this.flowers);
             this.map.createFromTiles(93, this.safetile, 'star', this.layer, this.stars);
             this.map.createFromTiles(333, this.safetile, 'mashroom', this.layer, this.mashrooms);
-            this.map.createFromTiles(214, this.safetile, 'bonus', this.layer, this.bonuses);
             
+            this.time.events.loop(10000, this.bonus, this);
+            this.time.events.loop(6000, this.nobonus, this);
+            this.bon=this.add.physicsGroup();
 
             //  The dots will need to be offset by 6px to put them back in the middle of the grid
             this.dots.setAll('x', 3, false, false, 1);
@@ -134,10 +133,6 @@
             this.pacman = this.add.sprite((14 * 16) + 8, (17 * 16) + 8, 'pacman', 0);
             this.pacman.anchor.set(0.5);
             this.pacman.animations.add('munch', [0, 1, 2, 1], 20, true);
-            
-            this.goomba = this.add.sprite(400, 80, 'goomba', 0);
-            this.goomba.anchor.set(0);
-            this.goomba.animations.add('munch', [0, 1, 2, 1], 20, true);
 
             this.physics.arcade.enable(this.pacman);
             this.pacman.body.setSize(16, 16, 0, 0);
@@ -323,6 +318,15 @@
             bonusound.play();
             
         },
+        
+        bonus: function(){
+          this.bon.create(this.rnd.between(128,304), this.rnd.between(176,304), 'bonus');  
+        },
+        
+        nobonus: function(){
+            this.bon.callAll('kill');
+        },
+        
 
         update: function () {
             
@@ -333,7 +337,7 @@
             this.physics.arcade.overlap(this.pacman, this.flowers, this.eatFlower, null, this);
             this.physics.arcade.overlap(this.pacman, this.mashrooms, this.eatMashroom, null, this);
             this.physics.arcade.overlap(this.pacman, this.stars, this.eatStar, null, this);
-            this.physics.arcade.overlap(this.pacman, this.bonuses, this.eatBonus, null, this);
+            this.physics.arcade.overlap(this.pacman, this.bon, this.eatBonus, null, this);
             
             scoreText.text = 'Score: ' +score;
             timeText.text = 'Time: ' +Math.round(this.game.time.totalElapsedSeconds());
